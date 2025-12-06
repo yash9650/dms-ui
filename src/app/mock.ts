@@ -1,0 +1,42 @@
+export const mockDocuments = [
+  {
+    id: 1,
+    name: "Appointment resolutions",
+    type: "folder",
+    createdBy: "John Green",
+    date: "12 Apr 2024",
+    size: null,
+  },
+  {
+    id: 2,
+    name: "Policy approvals",
+    type: "folder",
+    createdBy: "John Green",
+    date: "12 Apr 2024",
+    size: null,
+  },
+  {
+    id: 3,
+    name: "2025_01_15_Director_Appointment_Resolution.pdf",
+    type: "file",
+    createdBy: "John Green",
+    date: "12 Apr 2024",
+    size: "1 KB",
+  },
+  {
+    id: 4,
+    name: "2024_12_10_Dividend_Declaration_Resolution.docx2024",
+    type: "file",
+    createdBy: "John Green",
+    date: "12 Apr 2024",
+    size: "1 KB",
+  },
+  {
+    id: 5,
+    name: "2023_08_05_Investment_Policy_Approval.pdf",
+    type: "file",
+    createdBy: "John Green",
+    date: "12 Apr 2024",
+    size: "1 KB",
+  },
+];
