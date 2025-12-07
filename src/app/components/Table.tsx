@@ -1,42 +1,103 @@
-import { ChevronDown, FileText, Folder, MoreVertical } from "lucide-react";
+import { formatBytes, formatDate } from "@/lib/helper";
+import { TDocument } from "@/types/document.type";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Folder,
+  MoreVertical,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 type TTableProps = {
   columns: any[];
-  data: any[];
-  onRowClick: (row: any) => void;
+  data: TDocument[];
+  onRowClick: (row: TDocument) => void;
+  showCompletePath: boolean;
 };
 
-const Table: React.FC<TTableProps> = ({ columns, data, onRowClick }) => {
-  function formatBytes(bytes: number, decimals = 2): string {
-    if (bytes === 0) return "0 B";
+const Table: React.FC<TTableProps> = ({
+  columns,
+  data,
+  onRowClick,
+  showCompletePath,
+}) => {
+  const [sortBy, setSortBy] = useState<{
+    key: keyof TDocument;
+    order: "asc" | "desc";
+  } | null>(null);
 
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
+  const [selectedRows, setSelectedRows] = useState(new Set<number>());
+  let clickTimer: NodeJS.Timeout | null = null;
+  const checkboxRef = useRef<any>(null);
 
-    const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
+  function sort(): TDocument[] {
+    const sortedData = [...data];
+    if (!sortBy) return sortedData;
+    sortedData.sort((a, b) => {
+      switch (sortBy.key) {
+        case "createdAt":
+          const aTime = new Date(a.createdAt).getTime();
+          const bTime = new Date(b.createdAt).getTime();
 
-    const index = Math.floor(Math.log(bytes) / Math.log(k));
-
-    const value = bytes / Math.pow(k, index);
-
-    return parseFloat(value.toFixed(dm)) + " " + sizes[index];
+          return sortBy.order === "asc" ? aTime - bTime : bTime - aTime;
+        default:
+          return sortBy.order === "asc"
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name);
+      }
+    });
+    return sortedData;
   }
 
-  function formatDate(dateInput: string | number | Date): string {
-    const date = new Date(dateInput);
+  const handleSelectAll = () => {
+    if (selectedRows.size === data.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(data.map((doc) => doc.id)));
+    }
+  };
 
-    const day = date.getDate();
-    const month = date.toLocaleString("en-US", { month: "short" }); // Apr
-    const year = date.getFullYear();
-
-    return `${day} ${month} ${year}`;
+  function handleRowSelect(id: number) {
+    setSelectedRows((old) => {
+      const newSelected = new Set(old);
+      if (newSelected.has(id)) {
+        newSelected.delete(id);
+      } else {
+        newSelected.add(id);
+      }
+      return newSelected;
+    });
   }
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate =
+        selectedRows.size > 0 && selectedRows.size < data.length;
+    }
+  }, [selectedRows]);
+
+  useEffect(() => {
+    setSortBy(null);
+    setSelectedRows(new Set());
+  }, [data]);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto min-h-[575px]">
       <table className="w-full">
         <thead className="bg-slate-800 text-white">
           <tr>
+            <th>
+              <input
+                type="checkbox"
+                ref={checkboxRef}
+                disabled={data.length === 0}
+                checked={selectedRows.size === data.length && data.length != 0}
+                onChange={handleSelectAll}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            </th>
             {columns.map((col, idx) => (
               <th
                 key={idx}
@@ -46,18 +107,73 @@ const Table: React.FC<TTableProps> = ({ columns, data, onRowClick }) => {
               >
                 <div className="flex items-center gap-2">
                   {col.label}
-                  {col.sortable && <ChevronDown size={16} />}
+                  {col.sortable && sortBy?.key !== col.key && (
+                    <ArrowUpDown
+                      size={16}
+                      onClick={() => {
+                        setSortBy({
+                          key: col.key,
+                          order: "asc",
+                        });
+                      }}
+                    />
+                  )}
+                  {col.sortable && sortBy?.key === col.key && (
+                    <>
+                      {sortBy?.order === "asc" ? (
+                        <ChevronUp
+                          size={16}
+                          onClick={() => {
+                            setSortBy({
+                              key: col.key,
+                              order: "desc",
+                            });
+                          }}
+                        />
+                      ) : (
+                        <ChevronDown
+                          size={16}
+                          onClick={() => {
+                            setSortBy(null);
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
                 </div>
               </th>
             ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {data.map((row, idx) => (
+          {data.length === 0 && (
+            <tr>
+              <td colSpan={6} className="h-[550px] text-center align-middle">
+                <strong>No data available</strong>
+                <span className="block text-muted-foreground">
+                  Add new files and folders
+                </span>
+              </td>
+            </tr>
+          )}
+          {sort().map((row) => (
             <tr
               key={row.id}
               onDoubleClick={() => {
                 onRowClick(row);
+              }}
+              onClick={(e) => {
+                if (e.detail === 2) {
+                  if (clickTimer) clearTimeout(clickTimer);
+                  clickTimer = null;
+                  onRowClick(row);
+                  return;
+                }
+
+                clickTimer = setTimeout(() => {
+                  handleRowSelect(row.id);
+                  clickTimer = null;
+                }, 200);
               }}
               className="hover:bg-gray-50 transition-colors cursor-pointer"
             >
@@ -65,6 +181,11 @@ const Table: React.FC<TTableProps> = ({ columns, data, onRowClick }) => {
                 <input
                   type="checkbox"
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={selectedRows.has(row.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleRowSelect(row.id);
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 />
               </td>
@@ -77,6 +198,11 @@ const Table: React.FC<TTableProps> = ({ columns, data, onRowClick }) => {
                   )}
                   <span className="text-sm text-gray-900">{row.name}</span>
                 </div>
+                {showCompletePath && (
+                  <span className="block text-xs text-muted-foreground">
+                    {"Root/" + row.completePath}
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3 text-sm text-gray-700">John Doe</td>
               <td className="px-4 py-3 text-sm text-gray-700">

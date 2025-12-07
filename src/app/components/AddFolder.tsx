@@ -17,7 +17,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export const AddFolderModel: React.FC<{
-  parentId: number;
+  parentId: number | null;
   dirName: string;
 }> = ({ parentId, dirName }) => {
   const [name, setName] = useState("");
@@ -79,7 +79,7 @@ export const AddFolderModel: React.FC<{
   return (
     <Dialog open={open} onOpenChange={handleOpen} modal>
       <DialogTrigger asChild>
-        <Button size={"lg"}>Add new folder</Button>
+        <Button>Add new folder</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>

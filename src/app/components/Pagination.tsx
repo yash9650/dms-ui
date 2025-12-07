@@ -12,7 +12,7 @@ const Pagination: React.FC<TPaginationProps> = ({
   onPageChange,
 }) => {
   return (
-    <div className="flex items-center justify-between mt-4 px-4 py-3 bg-white border-t border-gray-200">
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
       <div className="text-sm text-gray-600">
         Show <span className="font-medium">10</span> rows per page
       </div>
@@ -30,7 +30,7 @@ const Pagination: React.FC<TPaginationProps> = ({
             onClick={() => onPageChange(idx + 1)}
             className={`w-8 h-8 rounded ${
               currentPage === idx + 1
-                ? "bg-blue-600 text-white"
+                ? "bg-primary text-primary-foreground"
                 : "hover:bg-gray-100 text-gray-700"
             }`}
           >

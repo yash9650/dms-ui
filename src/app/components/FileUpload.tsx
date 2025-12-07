@@ -3,6 +3,7 @@
 import React, { JSX, useCallback } from "react";
 import { useDropzone, FileRejection, DropzoneOptions } from "react-dropzone";
 import { Upload, File, X, Check, AlertCircle } from "lucide-react";
+import { formatBytes } from "@/lib/helper";
 
 export enum UploadFileStatus {
   UPLOADING = "uploading",
@@ -35,15 +36,6 @@ export interface FileUploadProps {
   description?: string;
   hideFileList?: boolean;
 }
-
-// Utility functions
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
 
 const getFileIcon = (): JSX.Element => {
   const iconClass = "w-8 h-8";
@@ -97,8 +89,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
     accept: {
       "application/pdf": [".pdf"],
       "application/zip": [".zip"],
-      "application/octet-stream": [".stl"],
-      "model/stl": [".stl"],
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
       "image/webp": [".webp"],
@@ -154,8 +144,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
           {/* <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2> */}
           <p className="text-gray-600">{description}</p>
           <p className="text-sm text-gray-500 mt-1">
-            Supported formats: IMAGES(JPG, JPEG, ETC..), PDF, ZIP, STL, HTML •
-            Max size: {maxSizeMB}MB per file
+            Supported formats: IMAGES(JPG, JPEG, ETC..), PDF, ZIP, HTML • Max
+            size: {maxSizeMB}MB per file
           </p>
         </div>
 
@@ -286,7 +276,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-gray-500">
-                        {formatFileSize(fileObj.file.size)}
+                        {formatBytes(fileObj.file.size)}
                       </p>
 
                       <span
@@ -314,38 +304,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
             </div>
           </div>
         )}
-
-        {/* Upload Summary */}
-        {/* {files.length > 0 && (
-          <div className="bg-gray-50 rounded-lg p-4 border">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                {files.filter((f) => f.status === "success").length} of{" "}
-                {files.length} files uploaded
-              </div>
-
-              {files.every((f) => f.status === "success") &&
-                files.length > 0 && (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <Check className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      All files uploaded successfully
-                    </span>
-                  </div>
-                )}
-
-              {files.some((f) => f.status === "error") && (
-                <div className="flex items-center gap-2 text-red-600">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {files.filter((f) => f.status === "error").length} files
-                    failed
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )} */}
       </div>
     </div>
   );

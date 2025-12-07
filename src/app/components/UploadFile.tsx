@@ -9,8 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { api } from "@/lib/fetcher";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +16,7 @@ import FileUpload, { UploadedFile, UploadFileStatus } from "./FileUpload";
 import { useRouter } from "next/navigation";
 
 export const UploadFile: React.FC<{
-  parentId: number;
+  parentId: number | null;
   dirName: string;
 }> = ({ parentId, dirName }) => {
   const [open, setOpen] = useState(false);
@@ -82,13 +80,34 @@ export const UploadFile: React.FC<{
     if (!apiRes?.id) {
       return false;
     }
-
+    handleFileRemoved(file.id);
     return true;
+  };
+
+  const handleFileRemoved = (fileId: string) => {
+    setFiles((prev) =>
+      prev.map((item) => {
+        if (!fileId) {
+          return {
+            ...item,
+            isVanishing: true,
+          };
+        }
+        return item.id === fileId ? { ...item, isVanishing: true } : item;
+      })
+    );
+
+    setTimeout(() => {
+      setFiles((prev) =>
+        prev.filter((item) => (fileId ? item.id !== fileId : false))
+      );
+    }, 300);
   };
 
   const saveChanges = async () => {
     setIsCreating(true);
     const filePromises = await Promise.all(files.map((file) => create(file)));
+
     if (filePromises.some((s) => !s)) {
       toast.error("Failed to upload some files");
     } else {
@@ -102,11 +121,9 @@ export const UploadFile: React.FC<{
   return (
     <Dialog open={open} onOpenChange={handleOpen} modal>
       <DialogTrigger asChild>
-        <Button variant={"outline"} size={"lg"}>
-          Upload files
-        </Button>
+        <Button variant={"outline"}>Upload files</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Upload files</DialogTitle>
           <DialogDescription>
